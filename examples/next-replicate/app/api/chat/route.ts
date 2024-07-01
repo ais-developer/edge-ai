@@ -7,8 +7,8 @@ const replicate = new Replicate({
   auth: process.env.REPLICATE_API_KEY || '',
 });
 
-// IMPORTANT! Set the runtime to edge
-export const runtime = 'edge';
+// Allow streaming responses up to 30 seconds
+export const maxDuration = 30;
 
 export async function POST(req: Request) {
   const { messages } = await req.json();

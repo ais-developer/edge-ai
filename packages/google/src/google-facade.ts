@@ -8,9 +8,10 @@ import {
   GoogleGenerativeAIModelId,
   GoogleGenerativeAISettings,
 } from './google-generative-ai-settings';
+import { GoogleGenerativeAIProviderSettings } from './google-provider';
 
 /**
- * Google provider.
+ * @deprecated Use `createGoogleGenerativeAI` instead.
  */
 export class Google {
   /**
@@ -20,35 +21,19 @@ export class Google {
 
   readonly apiKey?: string;
 
+  readonly headers?: Record<string, string>;
+
   private readonly generateId: () => string;
 
   /**
    * Creates a new Google provider instance.
    */
-  constructor(
-    options: {
-      /**
-       * Base URL for the Google API calls.
-       */
-      baseURL?: string;
-
-      /**
-       * @deprecated Use `baseURL` instead.
-       */
-      baseUrl?: string;
-
-      /**
-       * API key for authenticating requests.
-       */
-      apiKey?: string;
-
-      generateId?: () => string;
-    } = {},
-  ) {
+  constructor(options: GoogleGenerativeAIProviderSettings = {}) {
     this.baseURL =
       withoutTrailingSlash(options.baseURL ?? options.baseUrl) ??
       'https://generativelanguage.googleapis.com/v1beta';
     this.apiKey = options.apiKey;
+    this.headers = options.headers;
     this.generateId = options.generateId ?? generateId;
   }
 
@@ -61,6 +46,7 @@ export class Google {
           environmentVariableName: 'GOOGLE_GENERATIVE_AI_API_KEY',
           description: 'Google Generative AI',
         }),
+        ...this.headers,
       }),
     };
   }
@@ -86,8 +72,3 @@ export class Google {
     });
   }
 }
-
-/**
- * Default Google provider instance.
- */
-export const google = new Google();
