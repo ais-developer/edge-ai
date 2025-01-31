@@ -1,5 +1,24 @@
 # @ai-sdk/google-vertex
 
+## 2.1.8
+
+### Patch Changes
+
+- d89c3b9: feat (provider): add image model support to provider specification
+- Updated dependencies [d89c3b9]
+  - @ai-sdk/provider@1.0.7
+  - @ai-sdk/anthropic@1.1.6
+  - @ai-sdk/google@1.1.8
+  - @ai-sdk/provider-utils@2.1.6
+
+## 2.1.7
+
+### Patch Changes
+
+- d399f25: feat (provider/google-vertex): support public file urls in messages
+- Updated dependencies [d399f25]
+  - @ai-sdk/google@1.1.7
+
 ## 2.1.6
 
 ### Patch Changes

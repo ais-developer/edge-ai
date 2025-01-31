@@ -1,5 +1,46 @@
 # ai
 
+## 4.1.16
+
+### Patch Changes
+
+- 7e299a4: feat (ai/core): wrapLanguageModel can apply multiple middlewares
+
+## 4.1.15
+
+### Patch Changes
+
+- d89c3b9: feat (provider): add image model support to provider specification
+- d89c3b9: feat (core): type ahead for model ids with custom provider
+- 08f54fc: chore (ai/core): move custom provider to stable
+- Updated dependencies [d89c3b9]
+  - @ai-sdk/provider@1.0.7
+  - @ai-sdk/provider-utils@2.1.6
+  - @ai-sdk/ui-utils@1.1.8
+  - @ai-sdk/react@1.1.8
+
+## 4.1.14
+
+### Patch Changes
+
+- ca89615: fix (ai/core): only append assistant response at the end when there is a final user message
+
+## 4.1.13
+
+### Patch Changes
+
+- 999085e: feat (ai/core): add write function to DataStreamWriter
+
+## 4.1.12
+
+### Patch Changes
+
+- 0d2d9bf: fix (ui): single assistant message with multiple tool steps
+- Updated dependencies [0d2d9bf]
+- Updated dependencies [0d2d9bf]
+  - @ai-sdk/react@1.1.7
+  - @ai-sdk/ui-utils@1.1.7
+
 ## 4.1.11
 
 ### Patch Changes
