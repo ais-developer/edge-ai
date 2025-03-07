@@ -191,7 +191,11 @@ export class CohereChatLanguageModel implements LanguageModelV1 {
     const { warnings, ...args } = this.getArgs(options);
     args.tools = args.tools && this.removeJsonSchemaExtras(args.tools);
 
-    const { responseHeaders, value: response } = await postJsonToApi({
+    const {
+      responseHeaders,
+      value: response,
+      rawValue: rawResponse,
+    } = await postJsonToApi({
       url: `${this.config.baseURL}/chat`,
       headers: combineHeaders(this.config.headers(), options.headers),
       body: args,
@@ -204,10 +208,8 @@ export class CohereChatLanguageModel implements LanguageModelV1 {
     });
 
     const { messages, ...rawSettings } = args;
-    let text = response.message.content?.[0]?.text ?? '';
-    if (!text) {
-      text = response.message.tool_plan ?? '';
-    }
+
+    const text = response.message.content?.[0]?.text ?? '';
 
     return {
       text,
@@ -215,7 +217,9 @@ export class CohereChatLanguageModel implements LanguageModelV1 {
         ? response.message.tool_calls.map(toolCall => ({
             toolCallId: toolCall.id,
             toolName: toolCall.function.name,
-            args: toolCall.function.arguments,
+            // Cohere sometimes returns `null` for tool call arguments for tools
+            // defined as having no arguments.
+            args: toolCall.function.arguments.replace(/^null$/, '{}'),
             toolCallType: 'function',
           }))
         : [],
@@ -233,7 +237,10 @@ export class CohereChatLanguageModel implements LanguageModelV1 {
       response: {
         id: response.generation_id ?? undefined,
       },
-      rawResponse: { headers: responseHeaders },
+      rawResponse: {
+        headers: responseHeaders,
+        body: rawResponse,
+      },
       warnings,
       request: { body: JSON.stringify(args) },
     };
@@ -302,14 +309,6 @@ export class CohereChatLanguageModel implements LanguageModelV1 {
                 return;
               }
 
-              case 'tool-plan-delta': {
-                controller.enqueue({
-                  type: 'text-delta',
-                  textDelta: value.delta.message.tool_plan,
-                });
-                return;
-              }
-
               case 'tool-call-start': {
                 // The start message is the only one that specifies the tool id and name.
                 pendingToolCallDelta = {
@@ -351,14 +350,15 @@ export class CohereChatLanguageModel implements LanguageModelV1 {
 
               case 'tool-call-end': {
                 // Post the full tool call now that we have all of the arguments.
-
                 controller.enqueue({
                   type: 'tool-call',
                   toolCallId: pendingToolCallDelta.toolCallId,
                   toolName: pendingToolCallDelta.toolName,
                   toolCallType: 'function',
                   args: JSON.stringify(
-                    JSON.parse(pendingToolCallDelta.argsTextDelta),
+                    JSON.parse(
+                      pendingToolCallDelta.argsTextDelta?.trim() || '{}',
+                    ),
                   ),
                 });
 
