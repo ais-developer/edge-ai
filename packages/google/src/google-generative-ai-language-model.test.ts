@@ -41,20 +41,26 @@ const provider = createGoogleGenerativeAI({
 const model = provider.chat('gemini-pro');
 
 describe('supportsUrl', () => {
-  it('should return false if it is not a Gemini files URL', () => {
-    expect(
-      model.supportsUrl?.(new URL('https://example.com/foo/bar')),
-    ).toStrictEqual(false);
-  });
+  it('should use the isSupportedUrl function from config', () => {
+    const customModel = new GoogleGenerativeAILanguageModel(
+      'gemini-pro',
+      {},
+      {
+        provider: 'google.generative-ai',
+        baseURL: 'https://generativelanguage.googleapis.com/v1beta',
+        headers: {},
+        generateId: () => 'test-id',
+        isSupportedUrl: url => url.hostname === 'custom.example.com',
+      },
+    );
 
-  it('should return true if it is a Gemini files URL', () => {
     expect(
-      model.supportsUrl?.(
-        new URL(
-          'https://generativelanguage.googleapis.com/v1beta/files/00000000-00000000-00000000-00000000',
-        ),
-      ),
+      customModel.supportsUrl(new URL('https://custom.example.com/test')),
     ).toStrictEqual(true);
+
+    expect(
+      customModel.supportsUrl(new URL('https://other.example.com/test')),
+    ).toStrictEqual(false);
   });
 });
 
@@ -175,7 +181,7 @@ describe('doGenerate', () => {
     groundingMetadata,
     url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent',
   }: {
-    content?: string | Array<{ text: string; thought?: boolean }>;
+    content?: string;
     usage?: {
       promptTokenCount: number;
       candidatesTokenCount: number;
@@ -191,7 +197,7 @@ describe('doGenerate', () => {
       candidates: [
         {
           content: {
-            parts: Array.isArray(content) ? content : [{ text: content }],
+            parts: [{ text: content }],
             role: 'model',
           },
           finishReason: 'STOP',
@@ -243,6 +249,45 @@ describe('doGenerate', () => {
           promptTokens: 20,
           completionTokens: 5,
         });
+      },
+    ),
+  );
+
+  it(
+    'should handle MALFORMED_FUNCTION_CALL finish reason and empty content object',
+    withTestServer(
+      {
+        url: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent',
+        type: 'json-value',
+        content: {
+          candidates: [
+            {
+              content: {},
+              finishReason: 'MALFORMED_FUNCTION_CALL',
+            },
+          ],
+          usageMetadata: {
+            promptTokenCount: 9056,
+            totalTokenCount: 9056,
+            promptTokensDetails: [
+              {
+                modality: 'TEXT',
+                tokenCount: 9056,
+              },
+            ],
+          },
+          modelVersion: 'gemini-2.0-flash-lite',
+        },
+      },
+      async () => {
+        const { text, finishReason } = await model.doGenerate({
+          inputFormat: 'prompt',
+          mode: { type: 'regular' },
+          prompt: TEST_PROMPT,
+        });
+
+        expect(text).toBeUndefined();
+        expect(finishReason).toStrictEqual('error');
       },
     ),
   );
@@ -335,7 +380,7 @@ describe('doGenerate', () => {
   );
 
   it(
-    'should pass the model and the messages',
+    'should pass the model, messages, and options',
     withTestServer(prepareJsonResponse({}), async ({ call }) => {
       await model.doGenerate({
         inputFormat: 'prompt',
@@ -344,6 +389,8 @@ describe('doGenerate', () => {
           { role: 'system', content: 'test system instruction' },
           { role: 'user', content: [{ type: 'text', text: 'Hello' }] },
         ],
+        seed: 123,
+        temperature: 0.5,
       });
 
       expect(await call(0).getRequestBodyJson()).toStrictEqual({
@@ -354,7 +401,10 @@ describe('doGenerate', () => {
           },
         ],
         systemInstruction: { parts: [{ text: 'test system instruction' }] },
-        generationConfig: {},
+        generationConfig: {
+          seed: 123,
+          temperature: 0.5,
+        },
       });
     }),
   );
@@ -648,6 +698,44 @@ describe('doGenerate', () => {
     }),
   );
 
+  it(
+    'should extract sources from grounding metadata',
+    withTestServer(
+      prepareJsonResponse({
+        content: 'test response',
+        groundingMetadata: {
+          groundingChunks: [
+            {
+              web: { uri: 'https://source.example.com', title: 'Source Title' },
+            },
+            {
+              retrievedContext: {
+                uri: 'https://not-a-source.example.com',
+                title: 'Not a Source',
+              },
+            },
+          ],
+        },
+      }),
+      async () => {
+        const { sources } = await model.doGenerate({
+          inputFormat: 'prompt',
+          mode: { type: 'regular' },
+          prompt: TEST_PROMPT,
+        });
+
+        expect(sources).toEqual([
+          {
+            id: 'test-id',
+            sourceType: 'url',
+            title: 'Source Title',
+            url: 'https://source.example.com',
+          },
+        ]);
+      },
+    ),
+  );
+
   describe('async headers handling', () => {
     it(
       'merges async config headers with sync request headers',
@@ -663,6 +751,7 @@ describe('doGenerate', () => {
               'X-Common': 'config-value',
             }),
             generateId: () => 'test-id',
+            isSupportedUrl: () => true,
           },
         );
 
@@ -699,6 +788,7 @@ describe('doGenerate', () => {
               'X-Promise-Header': 'promise-value',
             }),
             generateId: () => 'test-id',
+            isSupportedUrl: () => true,
           },
         );
 
@@ -729,6 +819,7 @@ describe('doGenerate', () => {
               'X-Async-Header': 'async-value',
             }),
             generateId: () => 'test-id',
+            isSupportedUrl: () => true,
           },
         );
 
@@ -945,63 +1036,6 @@ describe('doGenerate', () => {
       ),
     );
   });
-
-  describe('reasoning models', () => {
-    it(
-      'should call v1alpha api and add thinking setting',
-      withTestServer(
-        prepareJsonResponse({
-          content: [{ text: '' }],
-          url: 'https://generativelanguage.googleapis.com/v1alpha/models/gemini-2.0-flash-thinking-exp:generateContent',
-        }),
-        async ({ call }) => {
-          const model = provider.languageModel('gemini-2.0-flash-thinking-exp');
-
-          await model.doGenerate({
-            inputFormat: 'prompt',
-            mode: { type: 'regular' },
-            prompt: TEST_PROMPT,
-          });
-
-          expect(await call(0).getRequestBodyJson()).toStrictEqual({
-            contents: [
-              {
-                role: 'user',
-                parts: [{ text: 'Hello' }],
-              },
-            ],
-            generationConfig: {
-              thinking_config: {
-                include_thoughts: true,
-              },
-            },
-          });
-        },
-      ),
-    );
-
-    it(
-      'should include reasoning chunks in the response',
-      withTestServer(
-        prepareJsonResponse({
-          content: [{ text: 't1', thought: true }, { text: 'v1' }],
-          url: 'https://generativelanguage.googleapis.com/v1alpha/models/gemini-2.0-flash-thinking-exp:streamGenerateContent',
-        }),
-        async () => {
-          const model = provider.languageModel('gemini-2.0-flash-thinking-exp');
-
-          const { text, reasoning } = await model.doGenerate({
-            inputFormat: 'prompt',
-            mode: { type: 'regular' },
-            prompt: TEST_PROMPT,
-          });
-
-          expect(reasoning).toStrictEqual('t1');
-          expect(text).toStrictEqual('v1');
-        },
-      ),
-    );
-  });
 });
 
 describe('doStream', () => {
@@ -1011,7 +1045,7 @@ describe('doStream', () => {
     groundingMetadata,
     url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:streamGenerateContent',
   }: {
-    content: Array<{ text: string; thought?: boolean }>;
+    content: string[];
     headers?: Record<string, string>;
     groundingMetadata?: GoogleGenerativeAIGroundingMetadata;
     url?: string;
@@ -1019,11 +1053,11 @@ describe('doStream', () => {
     url,
     type: 'stream-values',
     content: content.map(
-      (part, index) =>
+      (text, index) =>
         `data: ${JSON.stringify({
           candidates: [
             {
-              content: { parts: [part], role: 'model' },
+              content: { parts: [{ text }], role: 'model' },
               finishReason: 'STOP',
               index: 0,
               safetyRatings: SAFETY_RATINGS,
@@ -1047,7 +1081,7 @@ describe('doStream', () => {
     'should expose grounding metadata in provider metadata on finish',
     withTestServer(
       prepareStreamResponse({
-        content: [{ text: 'test' }],
+        content: ['test'],
         groundingMetadata: {
           webSearchQueries: ["What's the weather in Chicago this weekend?"],
           searchEntryPoint: {
@@ -1125,9 +1159,7 @@ describe('doStream', () => {
   it(
     'should stream text deltas',
     withTestServer(
-      prepareStreamResponse({
-        content: [{ text: 'Hello' }, { text: ', ' }, { text: 'world!' }],
-      }),
+      prepareStreamResponse({ content: ['Hello', ', ', 'world!'] }),
       async () => {
         const { stream } = await model.doStream({
           inputFormat: 'prompt',
@@ -1202,7 +1234,7 @@ describe('doStream', () => {
   it(
     'should pass the messages',
     withTestServer(
-      prepareStreamResponse({ content: [{ text: '' }] }),
+      prepareStreamResponse({ content: [''] }),
       async ({ call }) => {
         await model.doStream({
           inputFormat: 'prompt',
@@ -1226,7 +1258,7 @@ describe('doStream', () => {
   it(
     'should set streaming mode search param',
     withTestServer(
-      prepareStreamResponse({ content: [{ text: '' }] }),
+      prepareStreamResponse({ content: [''] }),
       async ({ call }) => {
         await model.doStream({
           inputFormat: 'prompt',
@@ -1243,7 +1275,7 @@ describe('doStream', () => {
   it(
     'should pass headers',
     withTestServer(
-      prepareStreamResponse({ content: [{ text: '' }] }),
+      prepareStreamResponse({ content: [''] }),
       async ({ call }) => {
         const provider = createGoogleGenerativeAI({
           apiKey: 'test-api-key',
@@ -1275,20 +1307,17 @@ describe('doStream', () => {
 
   it(
     'should send request body',
-    withTestServer(
-      prepareStreamResponse({ content: [{ text: '' }] }),
-      async () => {
-        const { request } = await model.doStream({
-          inputFormat: 'prompt',
-          mode: { type: 'regular' },
-          prompt: TEST_PROMPT,
-        });
+    withTestServer(prepareStreamResponse({ content: [''] }), async () => {
+      const { request } = await model.doStream({
+        inputFormat: 'prompt',
+        mode: { type: 'regular' },
+        prompt: TEST_PROMPT,
+      });
 
-        expect(request).toStrictEqual({
-          body: '{"generationConfig":{},"contents":[{"role":"user","parts":[{"text":"Hello"}]}]}',
-        });
-      },
-    ),
+      expect(request).toStrictEqual({
+        body: '{"generationConfig":{},"contents":[{"role":"user","parts":[{"text":"Hello"}]}]}',
+      });
+    }),
   );
 
   it(
@@ -1398,7 +1427,7 @@ describe('doStream', () => {
       'should use googleSearch for gemini-2.0-pro',
       withTestServer(
         prepareStreamResponse({
-          content: [{ text: '' }],
+          content: [''],
           url: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-pro:streamGenerateContent',
         }),
         async ({ call }) => {
@@ -1422,7 +1451,7 @@ describe('doStream', () => {
       'should use googleSearch for gemini-2.0-flash-exp',
       withTestServer(
         prepareStreamResponse({
-          content: [{ text: '' }],
+          content: [''],
           url: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:streamGenerateContent',
         }),
         async ({ call }) => {
@@ -1446,7 +1475,7 @@ describe('doStream', () => {
       'should use googleSearchRetrieval for non-gemini-2 models',
       withTestServer(
         prepareStreamResponse({
-          content: [{ text: '' }],
+          content: [''],
           url: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.0-pro:streamGenerateContent',
         }),
         async ({ call }) => {
@@ -1467,90 +1496,44 @@ describe('doStream', () => {
     );
   });
 
-  describe('reasoning models', () => {
-    it(
-      'should call v1alpha api and add thinking setting',
-      withTestServer(
-        prepareStreamResponse({
-          content: [{ text: '' }],
-          url: 'https://generativelanguage.googleapis.com/v1alpha/models/gemini-2.0-flash-thinking-exp:streamGenerateContent',
-        }),
-        async ({ call }) => {
-          const model = provider.languageModel('gemini-2.0-flash-thinking-exp');
-
-          await model.doStream({
-            inputFormat: 'prompt',
-            mode: { type: 'regular' },
-            prompt: TEST_PROMPT,
-          });
-
-          expect(await call(0).getRequestBodyJson()).toStrictEqual({
-            contents: [
-              {
-                role: 'user',
-                parts: [{ text: 'Hello' }],
-              },
-            ],
-            generationConfig: {
-              thinking_config: {
-                include_thoughts: true,
-              },
-            },
-          });
-        },
-      ),
-    );
-
-    it(
-      'should include reasoning chunks in the response',
-      withTestServer(
-        prepareStreamResponse({
-          content: [{ text: 't1', thought: true }, { text: 'v1' }],
-          url: 'https://generativelanguage.googleapis.com/v1alpha/models/gemini-2.0-flash-thinking-exp:streamGenerateContent',
-        }),
-        async () => {
-          const model = provider.languageModel('gemini-2.0-flash-thinking-exp');
-
-          const { stream } = await model.doStream({
-            inputFormat: 'prompt',
-            mode: { type: 'regular' },
-            prompt: TEST_PROMPT,
-          });
-
-          expect(await convertReadableStreamToArray(stream)).toStrictEqual([
-            { type: 'reasoning', textDelta: 't1' },
-            { type: 'text-delta', textDelta: 'v1' },
+  it(
+    'should stream source events',
+    withTestServer(
+      prepareStreamResponse({
+        content: ['Some initial text'],
+        groundingMetadata: {
+          groundingChunks: [
             {
-              type: 'finish',
-              finishReason: 'stop',
-              providerMetadata: {
-                google: {
-                  groundingMetadata: null,
-                  safetyRatings: [
-                    {
-                      category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT',
-                      probability: 'NEGLIGIBLE',
-                    },
-                    {
-                      category: 'HARM_CATEGORY_HATE_SPEECH',
-                      probability: 'NEGLIGIBLE',
-                    },
-                    {
-                      category: 'HARM_CATEGORY_HARASSMENT',
-                      probability: 'NEGLIGIBLE',
-                    },
-                    {
-                      category: 'HARM_CATEGORY_DANGEROUS_CONTENT',
-                      probability: 'NEGLIGIBLE',
-                    },
-                  ],
-                },
+              web: {
+                uri: 'https://source.example.com',
+                title: 'Source Title',
               },
-              usage: { promptTokens: 294, completionTokens: 233 },
             },
-          ]);
+          ],
         },
-      ),
-    );
-  });
+      }),
+      async () => {
+        const { stream } = await model.doStream({
+          inputFormat: 'prompt',
+          mode: { type: 'regular' },
+          prompt: TEST_PROMPT,
+        });
+
+        const events = await convertReadableStreamToArray(stream);
+        const sourceEvents = events.filter(event => event.type === 'source');
+
+        expect(sourceEvents).toEqual([
+          {
+            type: 'source',
+            source: {
+              id: 'test-id',
+              sourceType: 'url',
+              title: 'Source Title',
+              url: 'https://source.example.com',
+            },
+          },
+        ]);
+      },
+    ),
+  );
 });
