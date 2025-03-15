@@ -40,7 +40,12 @@ Additional request information.
   /**
 Additional response information.
    */
-  readonly response: LanguageModelResponseMetadata;
+  readonly response: LanguageModelResponseMetadata & {
+    /**
+Response body (available only for providers that use HTTP requests).
+    */
+    body?: unknown;
+  };
 
   /**
  Logprobs for the completion.
@@ -54,6 +59,11 @@ Additional response information.
 Additional provider-specific metadata. They are passed through
 from the provider to the AI SDK and enable provider-specific
 results that can be fully encapsulated in the provider.
+   */
+  readonly providerMetadata: ProviderMetadata | undefined;
+
+  /**
+@deprecated Use `providerMetadata` instead.
    */
   readonly experimental_providerMetadata: ProviderMetadata | undefined;
 

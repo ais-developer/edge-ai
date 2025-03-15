@@ -54,6 +54,10 @@ export class MistralChatLanguageModel implements LanguageModelV1 {
     return this.config.provider;
   }
 
+  supportsUrl(url: URL): boolean {
+    return url.protocol === 'https:';
+  }
+
   private getArgs({
     mode,
     prompt,
@@ -66,6 +70,7 @@ export class MistralChatLanguageModel implements LanguageModelV1 {
     stopSequences,
     responseFormat,
     seed,
+    providerMetadata,
   }: Parameters<LanguageModelV1['doGenerate']>[0]) {
     const type = mode.type;
 
@@ -128,6 +133,10 @@ export class MistralChatLanguageModel implements LanguageModelV1 {
       response_format:
         responseFormat?.type === 'json' ? { type: 'json_object' } : undefined,
 
+      // mistral-specific provider options:
+      document_image_limit: providerMetadata?.mistral?.documentImageLimit,
+      document_page_limit: providerMetadata?.mistral?.documentPageLimit,
+
       // messages:
       messages: convertToMistralChatMessages(prompt),
     };
@@ -175,7 +184,11 @@ export class MistralChatLanguageModel implements LanguageModelV1 {
   ): Promise<Awaited<ReturnType<LanguageModelV1['doGenerate']>>> {
     const { args, warnings } = this.getArgs(options);
 
-    const { responseHeaders, value: response } = await postJsonToApi({
+    const {
+      responseHeaders,
+      value: response,
+      rawValue: rawResponse,
+    } = await postJsonToApi({
       url: `${this.config.baseURL}/chat/completions`,
       headers: combineHeaders(this.config.headers(), options.headers),
       body: args,
@@ -189,7 +202,10 @@ export class MistralChatLanguageModel implements LanguageModelV1 {
 
     const { messages: rawPrompt, ...rawSettings } = args;
     const choice = response.choices[0];
-    let text = choice.message.content ?? undefined;
+
+    // extract text content.
+    // image content or reference content is currently ignored.
+    let text = extractTextContent(choice.message.content);
 
     // when there is a trailing assistant message, mistral will send the
     // content of that message again. we skip this repeated content to
@@ -216,7 +232,10 @@ export class MistralChatLanguageModel implements LanguageModelV1 {
         completionTokens: response.usage.completion_tokens,
       },
       rawCall: { rawPrompt, rawSettings },
-      rawResponse: { headers: responseHeaders },
+      rawResponse: {
+        headers: responseHeaders,
+        body: rawResponse,
+      },
       request: { body: JSON.stringify(args) },
       response: getResponseMetadata(response),
       warnings,
@@ -294,6 +313,10 @@ export class MistralChatLanguageModel implements LanguageModelV1 {
 
             const delta = choice.delta;
 
+            // extract text content.
+            // image content or reference content is currently ignored.
+            const textContent = extractTextContent(delta.content);
+
             // when there is a trailing assistant message, mistral will send the
             // content of that message again. we skip this repeated content to
             // avoid duplication, e.g. in continuation mode.
@@ -302,11 +325,11 @@ export class MistralChatLanguageModel implements LanguageModelV1 {
 
               if (
                 lastMessage.role === 'assistant' &&
-                delta.content === lastMessage.content.trimEnd()
+                textContent === lastMessage.content.trimEnd()
               ) {
                 // Mistral moves the trailing space from the prefix to the next chunk.
                 // We trim the leading space to avoid duplication.
-                if (delta.content.length < lastMessage.content.length) {
+                if (textContent.length < lastMessage.content.length) {
                   trimLeadingSpace = true;
                 }
 
@@ -315,12 +338,12 @@ export class MistralChatLanguageModel implements LanguageModelV1 {
               }
             }
 
-            if (delta.content != null) {
+            if (textContent != null) {
               controller.enqueue({
                 type: 'text-delta',
                 textDelta: trimLeadingSpace
-                  ? delta.content.trimStart()
-                  : delta.content,
+                  ? textContent.trimStart()
+                  : textContent,
               });
 
               trimLeadingSpace = false;
@@ -360,6 +383,66 @@ export class MistralChatLanguageModel implements LanguageModelV1 {
   }
 }
 
+function extractTextContent(content: z.infer<typeof mistralContentSchema>) {
+  if (typeof content === 'string') {
+    return content;
+  }
+
+  if (content == null) {
+    return undefined;
+  }
+
+  const textContent: string[] = [];
+
+  for (const chunk of content) {
+    const { type } = chunk;
+
+    switch (type) {
+      case 'text':
+        textContent.push(chunk.text);
+        break;
+      case 'image_url':
+      case 'reference':
+        // image content or reference content is currently ignored.
+        break;
+      default: {
+        const _exhaustiveCheck: never = type;
+        throw new Error(`Unsupported type: ${_exhaustiveCheck}`);
+      }
+    }
+  }
+
+  return textContent.length ? textContent.join('') : undefined;
+}
+
+const mistralContentSchema = z
+  .union([
+    z.string(),
+    z.array(
+      z.discriminatedUnion('type', [
+        z.object({
+          type: z.literal('text'),
+          text: z.string(),
+        }),
+        z.object({
+          type: z.literal('image_url'),
+          image_url: z.union([
+            z.string(),
+            z.object({
+              url: z.string(),
+              detail: z.string().nullable(),
+            }),
+          ]),
+        }),
+        z.object({
+          type: z.literal('reference'),
+          reference_ids: z.array(z.number()),
+        }),
+      ]),
+    ),
+  ])
+  .nullish();
+
 // limited version of the schema, focussed on what is needed for the implementation
 // this approach limits breakages when the API changes and increases efficiency
 const mistralChatResponseSchema = z.object({
@@ -370,7 +453,7 @@ const mistralChatResponseSchema = z.object({
     z.object({
       message: z.object({
         role: z.literal('assistant'),
-        content: z.string().nullable(),
+        content: mistralContentSchema,
         tool_calls: z
           .array(
             z.object({
@@ -401,7 +484,7 @@ const mistralChatChunkSchema = z.object({
     z.object({
       delta: z.object({
         role: z.enum(['assistant']).optional(),
-        content: z.string().nullish(),
+        content: mistralContentSchema,
         tool_calls: z
           .array(
             z.object({

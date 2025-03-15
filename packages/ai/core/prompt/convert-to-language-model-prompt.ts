@@ -225,7 +225,8 @@ function convertPartToLanguageModelPart(
     return {
       type: 'text',
       text: part.text,
-      providerMetadata: part.experimental_providerMetadata,
+      providerMetadata:
+        part.providerOptions ?? part.experimental_providerMetadata,
     };
   }
 
@@ -305,7 +306,8 @@ function convertPartToLanguageModelPart(
         type: 'image',
         image: normalizedData,
         mimeType,
-        providerMetadata: part.experimental_providerMetadata,
+        providerMetadata:
+          part.providerOptions ?? part.experimental_providerMetadata,
       };
     }
 
@@ -321,8 +323,10 @@ function convertPartToLanguageModelPart(
           normalizedData instanceof Uint8Array
             ? convertDataContentToBase64String(normalizedData)
             : normalizedData,
+        filename: part.filename,
         mimeType,
-        providerMetadata: part.experimental_providerMetadata,
+        providerMetadata:
+          part.providerOptions ?? part.experimental_providerMetadata,
       };
     }
   }
