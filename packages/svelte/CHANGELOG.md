@@ -1,5 +1,172 @@
 # @ai-sdk/svelte
 
+## 2.1.0
+
+### Minor Changes
+
+- 5bc638d: AI SDK 4.2
+
+### Patch Changes
+
+- Updated dependencies [5bc638d]
+  - @ai-sdk/provider-utils@2.2.0
+  - @ai-sdk/ui-utils@1.2.0
+
+## 2.0.4
+
+### Patch Changes
+
+- Updated dependencies [d0c4659]
+  - @ai-sdk/provider-utils@2.1.15
+  - @ai-sdk/ui-utils@1.1.21
+
+## 2.0.3
+
+### Patch Changes
+
+- 62b327e: fix: Use instance-specific generateId for user messages
+
+## 2.0.2
+
+### Patch Changes
+
+- d1ea22e: fix(ui/svelte): Allow class instances to be created as deriveds
+
+## 2.0.1
+
+### Patch Changes
+
+- @ai-sdk/provider-utils@2.1.14
+- @ai-sdk/ui-utils@1.1.20
+
+## 2.0.0
+
+### Major Changes
+
+- 9e2cb6f: feat (ui/svelte): Modern Svelte 5 (**breaking change**)
+
+## 1.1.24
+
+### Patch Changes
+
+- @ai-sdk/provider-utils@2.1.13
+- @ai-sdk/ui-utils@1.1.19
+
+## 1.1.23
+
+### Patch Changes
+
+- Updated dependencies [1531959]
+  - @ai-sdk/provider-utils@2.1.12
+  - @ai-sdk/ui-utils@1.1.18
+
+## 1.1.22
+
+### Patch Changes
+
+- 57cf070: fix: Remove hard-cast causing `Readable` to be treated as `Writable`
+
+## 1.1.21
+
+### Patch Changes
+
+- @ai-sdk/provider-utils@2.1.11
+- @ai-sdk/ui-utils@1.1.17
+
+## 1.1.20
+
+### Patch Changes
+
+- 30e6ebd: feat (provider/svelte): support Svelte 5
+
+## 1.1.19
+
+### Patch Changes
+
+- Updated dependencies [ddf9740]
+  - @ai-sdk/ui-utils@1.1.16
+  - @ai-sdk/provider-utils@2.1.10
+
+## 1.1.18
+
+### Patch Changes
+
+- @ai-sdk/provider-utils@2.1.9
+- @ai-sdk/ui-utils@1.1.15
+
+## 1.1.17
+
+### Patch Changes
+
+- 60c3220: fix (ui): set status to ready after stream was aborted
+
+## 1.1.16
+
+### Patch Changes
+
+- c43df41: feat (ui): add useChat status
+
+## 1.1.15
+
+### Patch Changes
+
+- Updated dependencies [2e898b4]
+  - @ai-sdk/provider-utils@2.1.8
+  - @ai-sdk/ui-utils@1.1.14
+
+## 1.1.14
+
+### Patch Changes
+
+- Updated dependencies [3ff4ef8]
+  - @ai-sdk/provider-utils@2.1.7
+  - @ai-sdk/ui-utils@1.1.13
+
+## 1.1.13
+
+### Patch Changes
+
+- Updated dependencies [166e09e]
+  - @ai-sdk/ui-utils@1.1.12
+
+## 1.1.12
+
+### Patch Changes
+
+- Updated dependencies [318b351]
+  - @ai-sdk/ui-utils@1.1.11
+
+## 1.1.11
+
+### Patch Changes
+
+- bcc61d4: feat (ui): introduce message parts for useChat
+- Updated dependencies [bcc61d4]
+  - @ai-sdk/ui-utils@1.1.10
+
+## 1.1.10
+
+### Patch Changes
+
+- Updated dependencies [6b8cc14]
+  - @ai-sdk/ui-utils@1.1.9
+
+## 1.1.9
+
+### Patch Changes
+
+- @ai-sdk/provider-utils@2.1.6
+- @ai-sdk/ui-utils@1.1.8
+
+## 1.1.8
+
+### Patch Changes
+
+- 0d2d9bf: fix (ui): empty submits (with allowEmptySubmit) create user messages
+- 0d2d9bf: fix (ui): single assistant message with multiple tool steps
+- Updated dependencies [0d2d9bf]
+  - @ai-sdk/ui-utils@1.1.7
+
 ## 1.1.7
 
 ### Patch Changes

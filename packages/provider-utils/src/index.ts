@@ -12,6 +12,7 @@ export { loadOptionalSetting } from './load-optional-setting';
 export { loadSetting } from './load-setting';
 export * from './parse-json';
 export * from './post-to-api';
+export * from './remove-undefined-entries';
 export * from './resolve';
 export * from './response-handler';
 export * from './uint8-utils';
@@ -20,5 +21,6 @@ export * from './validator';
 export * from './without-trailing-slash';
 
 export type { IDGenerator } from './generate-id';
+export { parseProviderOptions } from './parse-provider-options';
 export type { CoreToolCall, ToolCall } from './types/tool-call';
 export type { CoreToolResult, ToolResult } from './types/tool-result';

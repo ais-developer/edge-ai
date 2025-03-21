@@ -1,5 +1,168 @@
 # @ai-sdk/google
 
+## 1.2.1
+
+### Patch Changes
+
+- 994a13b: feat (provider/google): support IMAGE_SAFETY finish reason
+
+## 1.2.0
+
+### Minor Changes
+
+- 5bc638d: AI SDK 4.2
+
+### Patch Changes
+
+- Updated dependencies [5bc638d]
+  - @ai-sdk/provider@1.1.0
+  - @ai-sdk/provider-utils@2.2.0
+
+## 1.1.27
+
+### Patch Changes
+
+- d0c4659: feat (provider-utils): parseProviderOptions function
+- Updated dependencies [d0c4659]
+  - @ai-sdk/provider-utils@2.1.15
+
+## 1.1.26
+
+### Patch Changes
+
+- 0bd5bc6: feat (ai): support model-generated files
+- Updated dependencies [0bd5bc6]
+  - @ai-sdk/provider@1.0.12
+  - @ai-sdk/provider-utils@2.1.14
+
+## 1.1.25
+
+### Patch Changes
+
+- Updated dependencies [2e1101a]
+  - @ai-sdk/provider@1.0.11
+  - @ai-sdk/provider-utils@2.1.13
+
+## 1.1.24
+
+### Patch Changes
+
+- 5261762: fix (provider/google): ensure correct finishReason for tool calls in streaming response
+
+## 1.1.23
+
+### Patch Changes
+
+- 413f5a7: feat (providers/google): add gemma 3 model id
+
+## 1.1.22
+
+### Patch Changes
+
+- 62f46fd: feat (provider/google): add support for dynamic retrieval
+
+## 1.1.21
+
+### Patch Changes
+
+- Updated dependencies [1531959]
+  - @ai-sdk/provider-utils@2.1.12
+
+## 1.1.20
+
+### Patch Changes
+
+- e1d3d42: feat (ai): expose raw response body in generateText and generateObject
+- Updated dependencies [e1d3d42]
+  - @ai-sdk/provider@1.0.10
+  - @ai-sdk/provider-utils@2.1.11
+
+## 1.1.19
+
+### Patch Changes
+
+- 2c27583: fix (provider/google): support empty content in malformed function call responses
+
+## 1.1.18
+
+### Patch Changes
+
+- 5c8f512: feat (provider/google): add seed support
+
+## 1.1.17
+
+### Patch Changes
+
+- Updated dependencies [ddf9740]
+  - @ai-sdk/provider@1.0.9
+  - @ai-sdk/provider-utils@2.1.10
+
+## 1.1.16
+
+### Patch Changes
+
+- 1b2e2a0: fix (provider/google): add resilience against undefined parts
+
+## 1.1.15
+
+### Patch Changes
+
+- Updated dependencies [2761f06]
+  - @ai-sdk/provider@1.0.8
+  - @ai-sdk/provider-utils@2.1.9
+
+## 1.1.14
+
+### Patch Changes
+
+- 08a3641: fix (provider/google): support nullable enums in schema
+
+## 1.1.13
+
+### Patch Changes
+
+- Updated dependencies [2e898b4]
+  - @ai-sdk/provider-utils@2.1.8
+
+## 1.1.12
+
+### Patch Changes
+
+- Updated dependencies [3ff4ef8]
+  - @ai-sdk/provider-utils@2.1.7
+
+## 1.1.11
+
+### Patch Changes
+
+- 6eb7fc4: feat (ai/core): url source support
+
+## 1.1.10
+
+### Patch Changes
+
+- e5567f7: feat (provider/google): update model ids
+
+## 1.1.9
+
+### Patch Changes
+
+- b2573de: fix (provider/google): remove reasoning text following removal from Gemini API
+
+## 1.1.8
+
+### Patch Changes
+
+- Updated dependencies [d89c3b9]
+  - @ai-sdk/provider@1.0.7
+  - @ai-sdk/provider-utils@2.1.6
+
+## 1.1.7
+
+### Patch Changes
+
+- d399f25: feat (provider/google-vertex): support public file urls in messages
+
 ## 1.1.6
 
 ### Patch Changes

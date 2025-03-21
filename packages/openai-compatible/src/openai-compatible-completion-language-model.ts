@@ -72,6 +72,10 @@ export class OpenAICompatibleCompletionLanguageModel
     return this.config.provider;
   }
 
+  private get providerOptionsName(): string {
+    return this.config.provider.split('.')[0].trim();
+  }
+
   private getArgs({
     mode,
     inputFormat,
@@ -85,6 +89,7 @@ export class OpenAICompatibleCompletionLanguageModel
     stopSequences: userStopSequences,
     responseFormat,
     seed,
+    providerMetadata,
   }: Parameters<LanguageModelV1['doGenerate']>[0]) {
     const type = mode.type;
 
@@ -127,6 +132,7 @@ export class OpenAICompatibleCompletionLanguageModel
       frequency_penalty: frequencyPenalty,
       presence_penalty: presencePenalty,
       seed,
+      ...providerMetadata?.[this.providerOptionsName],
 
       // prompt:
       prompt: completionPrompt,
@@ -176,7 +182,11 @@ export class OpenAICompatibleCompletionLanguageModel
   ): Promise<Awaited<ReturnType<LanguageModelV1['doGenerate']>>> {
     const { args, warnings } = this.getArgs(options);
 
-    const { responseHeaders, value: response } = await postJsonToApi({
+    const {
+      responseHeaders,
+      value: response,
+      rawValue: rawResponse,
+    } = await postJsonToApi({
       url: this.config.url({
         path: '/completions',
         modelId: this.modelId,
@@ -202,7 +212,7 @@ export class OpenAICompatibleCompletionLanguageModel
       },
       finishReason: mapOpenAICompatibleFinishReason(choice.finish_reason),
       rawCall: { rawPrompt, rawSettings },
-      rawResponse: { headers: responseHeaders },
+      rawResponse: { headers: responseHeaders, body: rawResponse },
       response: getResponseMetadata(response),
       warnings,
       request: { body: JSON.stringify(args) },
