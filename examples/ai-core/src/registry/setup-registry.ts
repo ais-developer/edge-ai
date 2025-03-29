@@ -1,12 +1,12 @@
 import { anthropic } from '@ai-sdk/anthropic';
-import { xai } from '@ai-sdk/xai';
+import { fal } from '@ai-sdk/fal';
 import { groq } from '@ai-sdk/groq';
+import { luma } from '@ai-sdk/luma';
 import { mistral } from '@ai-sdk/mistral';
 import { openai } from '@ai-sdk/openai';
-import {
-  experimental_createProviderRegistry as createProviderRegistry,
-  experimental_customProvider as customProvider,
-} from 'ai';
+import { replicate } from '@ai-sdk/replicate';
+import { xai } from '@ai-sdk/xai';
+import { createProviderRegistry, customProvider } from 'ai';
 import 'dotenv/config';
 
 // custom provider with alias names:
@@ -36,4 +36,27 @@ export const registry = createProviderRegistry({
   openai: myOpenAI,
   xai,
   groq,
+});
+
+registry.languageModel('anthropic:haiku');
+
+const registryWithCustomSeparator = createProviderRegistry(
+  {
+    mistral,
+    anthropic: myAnthropic,
+    openai: myOpenAI,
+    xai,
+    groq,
+  },
+  { separator: ' > ' },
+);
+
+registryWithCustomSeparator.languageModel('anthropic > haiku');
+
+export const myImageModels = customProvider({
+  imageModels: {
+    recraft: fal.imageModel('recraft-v3'),
+    photon: luma.imageModel('photon-flash-1'),
+    flux: replicate.imageModel('black-forest-labs/flux-schnell'),
+  },
 });

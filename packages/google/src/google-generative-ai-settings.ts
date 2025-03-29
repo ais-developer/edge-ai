@@ -1,23 +1,41 @@
-// https://ai.google.dev/models/gemini
 export type GoogleGenerativeAIModelId =
-  | 'gemini-2.0-flash-thinking-exp'
-  | 'gemini-2.0-flash-exp'
+  // Stable models
+  // https://ai.google.dev/gemini-api/docs/models/gemini
+  | 'gemini-2.0-flash-001'
   | 'gemini-1.5-flash'
   | 'gemini-1.5-flash-latest'
   | 'gemini-1.5-flash-001'
   | 'gemini-1.5-flash-002'
-  | 'gemini-1.5-flash-exp-0827'
   | 'gemini-1.5-flash-8b'
   | 'gemini-1.5-flash-8b-latest'
-  | 'gemini-1.5-flash-8b-exp-0924'
-  | 'gemini-1.5-flash-8b-exp-0827'
-  | 'gemini-1.5-pro-latest'
+  | 'gemini-1.5-flash-8b-001'
   | 'gemini-1.5-pro'
+  | 'gemini-1.5-pro-latest'
   | 'gemini-1.5-pro-001'
   | 'gemini-1.5-pro-002'
-  | 'gemini-1.5-pro-exp-0827'
-  | 'gemini-1.0-pro'
+  // Experimental models
+  // https://ai.google.dev/gemini-api/docs/models/experimental-models
+  | 'gemini-2.5-pro-exp-03-25'
+  | 'gemini-2.0-flash-lite-preview-02-05'
+  | 'gemini-2.0-pro-exp-02-05'
+  | 'gemini-2.0-flash-thinking-exp-01-21'
+  | 'gemini-2.0-flash-exp'
+  | 'gemini-exp-1206'
+  | 'gemma-3-27b-it'
+  | 'learnlm-1.5-pro-experimental'
   | (string & {});
+
+export interface DynamicRetrievalConfig {
+  /**
+   * The mode of the predictor to be used in dynamic retrieval.
+   */
+  mode?: 'MODE_UNSPECIFIED' | 'MODE_DYNAMIC';
+  /**
+   * The threshold to be used in dynamic retrieval. If not set, a system default
+   * value is used.
+   */
+  dynamicThreshold?: number;
+}
 
 export interface GoogleGenerativeAISettings {
   /**
@@ -69,6 +87,15 @@ Optional. When enabled, the model will use Google search to ground the response.
 @see https://cloud.google.com/vertex-ai/generative-ai/docs/grounding/overview
    */
   useSearchGrounding?: boolean;
+
+  /**
+Optional. Specifies the dynamic retrieval configuration.
+
+@note Dynamic retrieval is only compatible with Gemini 1.5 Flash.
+
+@see https://cloud.google.com/vertex-ai/generative-ai/docs/multimodal/ground-with-google-search#dynamic-retrieval
+   */
+  dynamicRetrievalConfig?: DynamicRetrievalConfig;
 }
 
 export interface InternalGoogleGenerativeAISettings

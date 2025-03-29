@@ -1,5 +1,474 @@
 # ai
 
+## 4.2.8
+
+### Patch Changes
+
+- 65243ce: fix (ui): introduce step start parts
+- Updated dependencies [65243ce]
+  - @ai-sdk/ui-utils@1.2.2
+  - @ai-sdk/react@1.2.3
+
+## 4.2.7
+
+### Patch Changes
+
+- e14c066: fix (ai/core): convert user ui messages with only parts (no content) to core messages
+
+## 4.2.6
+
+### Patch Changes
+
+- 625591b: feat (ai/core): auto-complete for provider registry
+- 6a1506f: feat (ai/core): custom separator support for provider registry
+- ea3d998: chore (ai/core): move provider registry to stable
+
+## 4.2.5
+
+### Patch Changes
+
+- Updated dependencies [d92fa29]
+  - @ai-sdk/react@1.2.2
+
+## 4.2.4
+
+### Patch Changes
+
+- 3d6d96d: fix (ai/core): validate that messages are not empty
+
+## 4.2.3
+
+### Patch Changes
+
+- 0b3bf29: fix (ai/core): custom env support for stdio MCP transport
+
+## 4.2.2
+
+### Patch Changes
+
+- f10f0fa: fix (provider-utils): improve event source stream parsing performance
+- Updated dependencies [f10f0fa]
+  - @ai-sdk/provider-utils@2.2.1
+  - @ai-sdk/react@1.2.1
+  - @ai-sdk/ui-utils@1.2.1
+
+## 4.2.1
+
+### Patch Changes
+
+- b796152: feat (ai/core): add headers to MCP SSE transport
+- 06361d6: feat (ai/core): expose JSON RPC types (MCP)
+
+## 4.2.0
+
+### Minor Changes
+
+- 5bc638d: AI SDK 4.2
+
+### Patch Changes
+
+- Updated dependencies [5bc638d]
+  - @ai-sdk/provider@1.1.0
+  - @ai-sdk/provider-utils@2.2.0
+  - @ai-sdk/react@1.2.0
+  - @ai-sdk/ui-utils@1.2.0
+
+## 4.1.66
+
+### Patch Changes
+
+- 5d0fc29: chore (ai): improve cosine similarity calculation
+
+## 4.1.65
+
+### Patch Changes
+
+- 16c444f: fix (ai): expose ai/mcp-stdio
+
+## 4.1.64
+
+### Patch Changes
+
+- Updated dependencies [d0c4659]
+  - @ai-sdk/provider-utils@2.1.15
+  - @ai-sdk/react@1.1.25
+  - @ai-sdk/ui-utils@1.1.21
+
+## 4.1.63
+
+### Patch Changes
+
+- 0bd5bc6: feat (ai): support model-generated files
+- Updated dependencies [0bd5bc6]
+  - @ai-sdk/provider@1.0.12
+  - @ai-sdk/provider-utils@2.1.14
+  - @ai-sdk/ui-utils@1.1.20
+  - @ai-sdk/react@1.1.24
+
+## 4.1.62
+
+### Patch Changes
+
+- c9ed3c4: feat: enable custom mcp transports
+  breaking change: remove internal stdio transport creation
+
+## 4.1.61
+
+### Patch Changes
+
+- 2e1101a: feat (provider/openai): pdf input support
+- Updated dependencies [2e1101a]
+  - @ai-sdk/provider@1.0.11
+  - @ai-sdk/provider-utils@2.1.13
+  - @ai-sdk/ui-utils@1.1.19
+  - @ai-sdk/react@1.1.23
+
+## 4.1.60
+
+### Patch Changes
+
+- 0b8797f: feat (ai/core): expose response body for each generateText step
+
+## 4.1.59
+
+### Patch Changes
+
+- dd18049: fix (ai/core): suppress next.js warnings for node.js specific code path
+
+## 4.1.58
+
+### Patch Changes
+
+- e9897eb: fix (ai/core): move process access into functions and use globalThis
+
+## 4.1.57
+
+### Patch Changes
+
+- 092fdaa: feat (ai/core): add defaultSettingsMiddleware
+
+## 4.1.56
+
+### Patch Changes
+
+- 80be82b: feat (ai/core): add simulateStreamingMiddleware
+- 8109a24: fix (ai/core): limit node imports to types where possible
+
+## 4.1.55
+
+### Patch Changes
+
+- 1531959: feat (ai/core): add MCP client for using MCP tools
+- Updated dependencies [1531959]
+  - @ai-sdk/provider-utils@2.1.12
+  - @ai-sdk/react@1.1.22
+  - @ai-sdk/ui-utils@1.1.18
+
+## 4.1.54
+
+### Patch Changes
+
+- ee1c787: fix (ai/core): correct spread apply order to fix extract reasoning middleware with generateText
+
+## 4.1.53
+
+### Patch Changes
+
+- e1d3d42: feat (ai): expose raw response body in generateText and generateObject
+- Updated dependencies [e1d3d42]
+  - @ai-sdk/provider@1.0.10
+  - @ai-sdk/provider-utils@2.1.11
+  - @ai-sdk/ui-utils@1.1.17
+  - @ai-sdk/react@1.1.21
+
+## 4.1.52
+
+### Patch Changes
+
+- 5329a69: fix (ai/core): fix duplicated reasoning in streamText onFinish and messages
+
+## 4.1.51
+
+### Patch Changes
+
+- 0cb2647: feat (ai/core): add streamText sendStart & sendFinish data stream options
+
+## 4.1.50
+
+### Patch Changes
+
+- ae98f0d: fix (ai/core): forward providerOptions for text, image, and file parts
+
+## 4.1.49
+
+### Patch Changes
+
+- dc027d3: fix (ai/core): add reasoning support to appendResponseMessages
+
+## 4.1.48
+
+### Patch Changes
+
+- Updated dependencies [6255fbc]
+  - @ai-sdk/react@1.1.20
+
+## 4.1.47
+
+### Patch Changes
+
+- Updated dependencies [da5c734]
+  - @ai-sdk/react@1.1.19
+
+## 4.1.46
+
+### Patch Changes
+
+- ddf9740: feat (ai): add anthropic reasoning
+- Updated dependencies [ddf9740]
+  - @ai-sdk/provider@1.0.9
+  - @ai-sdk/ui-utils@1.1.16
+  - @ai-sdk/provider-utils@2.1.10
+  - @ai-sdk/react@1.1.18
+
+## 4.1.45
+
+### Patch Changes
+
+- 93bd5a0: feat (ai/ui): add writeSource to createDataStream
+
+## 4.1.44
+
+### Patch Changes
+
+- f8e7df2: fix (ai/core): add `startWithReasoning` option to `extractReasoningMiddleware`
+
+## 4.1.43
+
+### Patch Changes
+
+- ef2e23b: feat (ai/core): add experimental repairText function to generateObject
+
+## 4.1.42
+
+### Patch Changes
+
+- Updated dependencies [2761f06]
+  - @ai-sdk/provider@1.0.8
+  - @ai-sdk/provider-utils@2.1.9
+  - @ai-sdk/ui-utils@1.1.15
+  - @ai-sdk/react@1.1.17
+
+## 4.1.41
+
+### Patch Changes
+
+- Updated dependencies [60c3220]
+  - @ai-sdk/react@1.1.16
+
+## 4.1.40
+
+### Patch Changes
+
+- Updated dependencies [c43df41]
+  - @ai-sdk/react@1.1.15
+
+## 4.1.39
+
+### Patch Changes
+
+- 075a9a9: fix (ai): improve tsdoc on custom provider
+
+## 4.1.38
+
+### Patch Changes
+
+- 4c9c194: chore (ai): add description to provider-defined tools for better accessibility
+- 2e898b4: chore (ai): move mockId test helper into provider utils
+- Updated dependencies [2e898b4]
+  - @ai-sdk/provider-utils@2.1.8
+  - @ai-sdk/react@1.1.14
+  - @ai-sdk/ui-utils@1.1.14
+
+## 4.1.37
+
+### Patch Changes
+
+- c1e10d1: chore: export UIMessage type
+
+## 4.1.36
+
+### Patch Changes
+
+- Updated dependencies [3ff4ef8]
+  - @ai-sdk/provider-utils@2.1.7
+  - @ai-sdk/react@1.1.13
+  - @ai-sdk/ui-utils@1.1.13
+
+## 4.1.35
+
+### Patch Changes
+
+- 166e09e: feat (ai/ui): forward source parts to useChat
+- Updated dependencies [166e09e]
+  - @ai-sdk/ui-utils@1.1.12
+  - @ai-sdk/react@1.1.12
+
+## 4.1.34
+
+### Patch Changes
+
+- dc49119: chore: deprecate ai/react
+
+## 4.1.33
+
+### Patch Changes
+
+- 74f0f0e: chore (ai/core): move providerMetadata to stable
+
+## 4.1.32
+
+### Patch Changes
+
+- c128ca5: fix (ai/core): fix streamText onFinish messages with structured output
+
+## 4.1.31
+
+### Patch Changes
+
+- b30b1cc: feat (ai/core): add onError callback to streamObject
+
+## 4.1.30
+
+### Patch Changes
+
+- 4ee5b6f: fix (core): remove invalid providerOptions from streamObject onFinish callback
+
+## 4.1.29
+
+### Patch Changes
+
+- 605de49: feat (ai/core): export callback types
+
+## 4.1.28
+
+### Patch Changes
+
+- 6eb7fc4: feat (ai/core): url source support
+
+## 4.1.27
+
+### Patch Changes
+
+- Updated dependencies [318b351]
+  - @ai-sdk/ui-utils@1.1.11
+  - @ai-sdk/react@1.1.11
+
+## 4.1.26
+
+### Patch Changes
+
+- 34983d4: fix (ai/core): bind supportsUrl when creating wrapper
+
+## 4.1.25
+
+### Patch Changes
+
+- 5a21310: fix (ai/core): use ai types on custom provider to prevent ts error
+
+## 4.1.24
+
+### Patch Changes
+
+- 38142b8: feat (ai/core): introduce streamText consumeStream
+
+## 4.1.23
+
+### Patch Changes
+
+- b08f7c1: fix (ai/core): suppress errors in textStream
+
+## 4.1.22
+
+### Patch Changes
+
+- 2bec72a: feat (ai/core): add onError callback to streamText
+
+## 4.1.21
+
+### Patch Changes
+
+- d387989: feat (ai/core): re-export zodSchema
+
+## 4.1.20
+
+### Patch Changes
+
+- bcc61d4: feat (ui): introduce message parts for useChat
+- Updated dependencies [bcc61d4]
+  - @ai-sdk/ui-utils@1.1.10
+  - @ai-sdk/react@1.1.10
+
+## 4.1.19
+
+### Patch Changes
+
+- Updated dependencies [6b8cc14]
+  - @ai-sdk/ui-utils@1.1.9
+  - @ai-sdk/react@1.1.9
+
+## 4.1.18
+
+### Patch Changes
+
+- 6a1acfe: fix (ai/core): revert '@internal' tag on function definitions due to build impacts
+
+## 4.1.17
+
+### Patch Changes
+
+- 5af8cdb: fix (ai/core): support this reference in model.supportsUrl implementations
+
+## 4.1.16
+
+### Patch Changes
+
+- 7e299a4: feat (ai/core): wrapLanguageModel can apply multiple middlewares
+
+## 4.1.15
+
+### Patch Changes
+
+- d89c3b9: feat (provider): add image model support to provider specification
+- d89c3b9: feat (core): type ahead for model ids with custom provider
+- 08f54fc: chore (ai/core): move custom provider to stable
+- Updated dependencies [d89c3b9]
+  - @ai-sdk/provider@1.0.7
+  - @ai-sdk/provider-utils@2.1.6
+  - @ai-sdk/ui-utils@1.1.8
+  - @ai-sdk/react@1.1.8
+
+## 4.1.14
+
+### Patch Changes
+
+- ca89615: fix (ai/core): only append assistant response at the end when there is a final user message
+
+## 4.1.13
+
+### Patch Changes
+
+- 999085e: feat (ai/core): add write function to DataStreamWriter
+
+## 4.1.12
+
+### Patch Changes
+
+- 0d2d9bf: fix (ui): single assistant message with multiple tool steps
+- Updated dependencies [0d2d9bf]
+- Updated dependencies [0d2d9bf]
+  - @ai-sdk/react@1.1.7
+  - @ai-sdk/ui-utils@1.1.7
+
 ## 4.1.11
 
 ### Patch Changes
