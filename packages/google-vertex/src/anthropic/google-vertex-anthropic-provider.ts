@@ -100,6 +100,7 @@ export function createVertexAnthropic(
         baseURL,
         headers: options.headers ?? {},
         fetch: options.fetch,
+        supportsImageUrls: false,
         buildRequestUrl: (baseURL, isStreaming) =>
           `${baseURL}/${modelId}:${
             isStreaming ? 'streamRawPredict' : 'rawPredict'
@@ -137,5 +138,5 @@ export function createVertexAnthropic(
 
   provider.tools = anthropicTools;
 
-  return provider as GoogleVertexAnthropicProvider;
+  return provider;
 }

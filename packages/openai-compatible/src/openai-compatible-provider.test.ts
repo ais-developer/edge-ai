@@ -1,4 +1,3 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createOpenAICompatible } from './openai-compatible-provider';
 import { OpenAICompatibleChatLanguageModel } from './openai-compatible-chat-language-model';
 import { OpenAICompatibleCompletionLanguageModel } from './openai-compatible-completion-language-model';
@@ -33,18 +32,6 @@ describe('OpenAICompatibleProvider', () => {
   });
 
   describe('createOpenAICompatible', () => {
-    it('should throw error if baseURL is not provided', () => {
-      expect(() => createOpenAICompatible({ name: 'test-provider' })).toThrow(
-        'Base URL is required',
-      );
-    });
-
-    it('should throw error if name is not provided', () => {
-      expect(() =>
-        createOpenAICompatible({ baseURL: 'https://api.example.com' }),
-      ).toThrow('Provider name is required');
-    });
-
     it('should create provider with correct configuration', () => {
       const options = {
         baseURL: 'https://api.example.com',

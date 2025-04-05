@@ -1,5 +1,225 @@
 # @ai-sdk/azure
 
+## 1.3.7
+
+### Patch Changes
+
+- Updated dependencies [2c19b9a]
+  - @ai-sdk/provider-utils@2.2.4
+  - @ai-sdk/openai@1.3.7
+
+## 1.3.6
+
+### Patch Changes
+
+- Updated dependencies [28be004]
+  - @ai-sdk/provider-utils@2.2.3
+  - @ai-sdk/openai@1.3.6
+
+## 1.3.5
+
+### Patch Changes
+
+- Updated dependencies [52ed95f]
+- Updated dependencies [b01120e]
+  - @ai-sdk/openai@1.3.5
+  - @ai-sdk/provider-utils@2.2.2
+
+## 1.3.4
+
+### Patch Changes
+
+- Updated dependencies [b520dba]
+  - @ai-sdk/openai@1.3.4
+
+## 1.3.3
+
+### Patch Changes
+
+- Updated dependencies [24befd8]
+  - @ai-sdk/openai@1.3.3
+
+## 1.3.2
+
+### Patch Changes
+
+- Updated dependencies [db15028]
+  - @ai-sdk/openai@1.3.2
+
+## 1.3.1
+
+### Patch Changes
+
+- Updated dependencies [f10f0fa]
+  - @ai-sdk/provider-utils@2.2.1
+  - @ai-sdk/openai@1.3.1
+
+## 1.3.0
+
+### Minor Changes
+
+- 5bc638d: AI SDK 4.2
+
+### Patch Changes
+
+- Updated dependencies [5bc638d]
+  - @ai-sdk/openai@1.3.0
+  - @ai-sdk/provider@1.1.0
+  - @ai-sdk/provider-utils@2.2.0
+
+## 1.2.8
+
+### Patch Changes
+
+- Updated dependencies [9f4f1bc]
+  - @ai-sdk/openai@1.2.8
+
+## 1.2.7
+
+### Patch Changes
+
+- Updated dependencies [d0c4659]
+  - @ai-sdk/provider-utils@2.1.15
+  - @ai-sdk/openai@1.2.7
+
+## 1.2.6
+
+### Patch Changes
+
+- Updated dependencies [0bd5bc6]
+  - @ai-sdk/provider@1.0.12
+  - @ai-sdk/openai@1.2.6
+  - @ai-sdk/provider-utils@2.1.14
+
+## 1.2.5
+
+### Patch Changes
+
+- Updated dependencies [2e1101a]
+  - @ai-sdk/provider@1.0.11
+  - @ai-sdk/openai@1.2.5
+  - @ai-sdk/provider-utils@2.1.13
+
+## 1.2.4
+
+### Patch Changes
+
+- Updated dependencies [523f128]
+  - @ai-sdk/openai@1.2.4
+
+## 1.2.3
+
+### Patch Changes
+
+- Updated dependencies [1531959]
+  - @ai-sdk/provider-utils@2.1.12
+  - @ai-sdk/openai@1.2.3
+
+## 1.2.2
+
+### Patch Changes
+
+- Updated dependencies [e3a389e]
+  - @ai-sdk/openai@1.2.2
+
+## 1.2.1
+
+### Patch Changes
+
+- Updated dependencies [e1d3d42]
+  - @ai-sdk/provider@1.0.10
+  - @ai-sdk/openai@1.2.1
+  - @ai-sdk/provider-utils@2.1.11
+
+## 1.2.0
+
+### Minor Changes
+
+- ede6d1b: feat (provider/azure): Add Azure image model support
+
+### Patch Changes
+
+- Updated dependencies [ede6d1b]
+  - @ai-sdk/openai@1.2.0
+
+## 1.1.15
+
+### Patch Changes
+
+- Updated dependencies [d8216f8]
+  - @ai-sdk/openai@1.1.15
+
+## 1.1.14
+
+### Patch Changes
+
+- Updated dependencies [ddf9740]
+  - @ai-sdk/provider@1.0.9
+  - @ai-sdk/openai@1.1.14
+  - @ai-sdk/provider-utils@2.1.10
+
+## 1.1.13
+
+### Patch Changes
+
+- Updated dependencies [2761f06]
+  - @ai-sdk/provider@1.0.8
+  - @ai-sdk/openai@1.1.13
+  - @ai-sdk/provider-utils@2.1.9
+
+## 1.1.12
+
+### Patch Changes
+
+- Updated dependencies [ea159cb]
+  - @ai-sdk/openai@1.1.12
+
+## 1.1.11
+
+### Patch Changes
+
+- Updated dependencies [2e898b4]
+  - @ai-sdk/provider-utils@2.1.8
+  - @ai-sdk/openai@1.1.11
+
+## 1.1.10
+
+### Patch Changes
+
+- Updated dependencies [3ff4ef8]
+  - @ai-sdk/provider-utils@2.1.7
+  - @ai-sdk/openai@1.1.10
+
+## 1.1.9
+
+### Patch Changes
+
+- Updated dependencies [c55b81a]
+  - @ai-sdk/openai@1.1.9
+
+## 1.1.8
+
+### Patch Changes
+
+- Updated dependencies [161be90]
+  - @ai-sdk/openai@1.1.8
+
+## 1.1.7
+
+### Patch Changes
+
+- Updated dependencies [0a2f026]
+  - @ai-sdk/openai@1.1.7
+
+## 1.1.6
+
+### Patch Changes
+
+- Updated dependencies [d89c3b9]
+  - @ai-sdk/provider@1.0.7
+  - @ai-sdk/openai@1.1.6
+  - @ai-sdk/provider-utils@2.1.6
+
 ## 1.1.5
 
 ### Patch Changes

@@ -16,7 +16,11 @@ import {
   createAsyncIterableStream,
 } from '../util/async-iterable-stream';
 import { ObjectStreamPart } from './stream-object-result';
-import { LanguageModelResponseMetadata, LanguageModelUsage } from '../types';
+import {
+  FinishReason,
+  LanguageModelResponseMetadata,
+  LanguageModelUsage,
+} from '../types';
 
 export interface OutputStrategy<PARTIAL, RESULT, ELEMENT_STREAM> {
   readonly type: 'object' | 'array' | 'enum' | 'no-schema';
@@ -64,6 +68,7 @@ const noSchemaOutputStrategy: OutputStrategy<JSONValue, JSONValue, never> = {
       text: string;
       response: LanguageModelResponseMetadata;
       usage: LanguageModelUsage;
+      finishReason: FinishReason;
     },
   ): ValidationResult<JSONValue> {
     return value === undefined
@@ -74,6 +79,7 @@ const noSchemaOutputStrategy: OutputStrategy<JSONValue, JSONValue, never> = {
             text: context.text,
             response: context.response,
             usage: context.usage,
+            finishReason: context.finishReason,
           }),
         }
       : { success: true, value };
@@ -255,10 +261,7 @@ const arrayOutputStrategy = <ELEMENT>(
 
                 case 'text-delta':
                 case 'finish':
-                  break;
-
-                case 'error':
-                  controller.error(chunk.error);
+                case 'error': // suppress error (use onError instead)
                   break;
 
                 default: {

@@ -3,15 +3,15 @@ import { generateText } from 'ai';
 import 'dotenv/config';
 
 async function main() {
-  const { reasoning, text } = await generateText({
-    model: google('gemini-2.0-flash-thinking-exp'),
+  const result = await generateText({
+    model: google('gemini-2.5-pro-exp-03-25'),
     prompt: 'How many "r"s are in the word "strawberry"?',
   });
 
-  console.log('REASONING:\n');
-  console.log(reasoning);
-  console.log('\nTEXT:\n');
-  console.log(text);
+  console.log(result.text);
+  console.log();
+  console.log('Token usage:', result.usage);
+  console.log('Finish reason:', result.finishReason);
 }
 
 main().catch(console.error);
