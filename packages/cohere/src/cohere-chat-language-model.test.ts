@@ -1,8 +1,7 @@
 import { LanguageModelV1Prompt } from '@ai-sdk/provider';
 import {
-  JsonTestServer,
-  StreamingTestServer,
   convertReadableStreamToArray,
+  createTestServer,
 } from '@ai-sdk/provider-utils/test';
 import { createCohere } from './cohere-provider';
 
@@ -14,21 +13,18 @@ const TEST_PROMPT: LanguageModelV1Prompt = [
   { role: 'user', content: [{ type: 'text', text: 'Hello' }] },
 ];
 
-let testIdCounter = 0;
-
 const provider = createCohere({
   apiKey: 'test-api-key',
 });
 const model = provider('command-r-plus');
 
+const server = createTestServer({
+  'https://api.cohere.com/v2/chat': {},
+});
+
 describe('doGenerate', () => {
-  const server = new JsonTestServer('https://api.cohere.com/v2/chat');
-
-  server.setupTestEnvironment();
-
   function prepareJsonResponse({
     text = '',
-    tool_plan = '',
     tool_calls,
     finish_reason = 'COMPLETE',
     tokens = {
@@ -36,9 +32,9 @@ describe('doGenerate', () => {
       output_tokens: 30,
     },
     generation_id = 'dad0c7cd-7982-42a7-acfb-706ccf598291',
+    headers,
   }: {
     text?: string;
-    tool_plan?: string;
     tool_calls?: any;
     finish_reason?: string;
     tokens?: {
@@ -46,24 +42,26 @@ describe('doGenerate', () => {
       output_tokens: number;
     };
     generation_id?: string;
+    headers?: Record<string, string>;
   }) {
-    server.responseBodyJson = {
-      response_id: '0cf61ae0-1f60-4c18-9802-be7be809e712',
-      generation_id,
-      message: {
-        role: 'assistant',
-        content: [{ type: 'text', text }],
-        ...(tool_calls ? { tool_calls } : {}),
-      },
-      finish_reason,
-      usage: {
-        billed_units: { input_tokens: 9, output_tokens: 415 },
-        tokens,
+    server.urls['https://api.cohere.com/v2/chat'].response = {
+      type: 'json-value',
+      headers,
+      body: {
+        response_id: '0cf61ae0-1f60-4c18-9802-be7be809e712',
+        generation_id,
+        message: {
+          role: 'assistant',
+          content: [{ type: 'text', text }],
+          ...(tool_calls ? { tool_calls } : {}),
+        },
+        finish_reason,
+        usage: {
+          billed_units: { input_tokens: 9, output_tokens: 415 },
+          tokens,
+        },
       },
     };
-    if (tool_plan) {
-      server.responseBodyJson.message.tool_plan = tool_plan;
-    }
   }
 
   it('should extract text response', async () => {
@@ -80,7 +78,6 @@ describe('doGenerate', () => {
 
   it('should extract tool plan', async () => {
     prepareJsonResponse({
-      tool_plan: 'Looking up the stock price for AAPL.',
       tool_calls: [
         {
           id: 'test-id-1',
@@ -124,7 +121,6 @@ describe('doGenerate', () => {
         args: '{"value":"example value"}',
       },
     ]);
-    expect(text).toStrictEqual('Looking up the stock price for AAPL.');
     expect(finishReason).toStrictEqual('stop');
   });
 
@@ -224,11 +220,9 @@ describe('doGenerate', () => {
   });
 
   it('should expose the raw response headers', async () => {
-    prepareJsonResponse({});
-
-    server.responseHeaders = {
-      'test-header': 'test-value',
-    };
+    prepareJsonResponse({
+      headers: { 'test-header': 'test-value' },
+    });
 
     const { rawResponse } = await model.doGenerate({
       inputFormat: 'prompt',
@@ -255,12 +249,98 @@ describe('doGenerate', () => {
       prompt: TEST_PROMPT,
     });
 
-    expect(await server.getRequestBodyJson()).toStrictEqual({
+    expect(await server.calls[0].requestBody).toStrictEqual({
       model: 'command-r-plus',
       messages: [
         { role: 'system', content: 'you are a friendly bot!' },
         { role: 'user', content: 'Hello' },
       ],
+    });
+  });
+
+  it('should send correct request in object-tool mode', async () => {
+    prepareJsonResponse({});
+
+    await model.doGenerate({
+      inputFormat: 'prompt',
+      mode: {
+        type: 'object-tool',
+        tool: {
+          type: 'function',
+          name: 'test-tool',
+          description: 'test description',
+          parameters: {
+            type: 'object',
+            properties: { value: { type: 'string' } },
+            required: ['value'],
+            additionalProperties: false,
+            $schema: 'http://json-schema.org/draft-07/schema#',
+          },
+        },
+      },
+      prompt: TEST_PROMPT,
+    });
+
+    expect(await server.calls[0].requestBody).toStrictEqual({
+      model: 'command-r-plus',
+      messages: [
+        { role: 'system', content: 'you are a friendly bot!' },
+        { role: 'user', content: 'Hello' },
+      ],
+      tool_choice: 'REQUIRED',
+      tools: [
+        {
+          type: 'function',
+          function: {
+            name: 'test-tool',
+            description: 'test description',
+            parameters: {
+              type: 'object',
+              properties: { value: { type: 'string' } },
+              required: ['value'],
+              additionalProperties: false,
+              $schema: 'http://json-schema.org/draft-07/schema#',
+            },
+          },
+        },
+      ],
+    });
+  });
+
+  it('should send correct request in object-json mode', async () => {
+    prepareJsonResponse({});
+
+    await model.doGenerate({
+      inputFormat: 'prompt',
+      mode: {
+        type: 'object-json',
+        schema: {
+          type: 'object',
+          properties: { value: { type: 'string' } },
+          required: ['value'],
+          additionalProperties: false,
+          $schema: 'http://json-schema.org/draft-07/schema#',
+        },
+      },
+      prompt: TEST_PROMPT,
+    });
+
+    expect(await server.calls[0].requestBody).toStrictEqual({
+      model: 'command-r-plus',
+      messages: [
+        { role: 'system', content: 'you are a friendly bot!' },
+        { role: 'user', content: 'Hello' },
+      ],
+      response_format: {
+        type: 'json_object',
+        json_schema: {
+          type: 'object',
+          properties: { value: { type: 'string' } },
+          required: ['value'],
+          additionalProperties: false,
+          $schema: 'http://json-schema.org/draft-07/schema#',
+        },
+      },
     });
   });
 
@@ -294,7 +374,7 @@ describe('doGenerate', () => {
         prompt: TEST_PROMPT,
       });
 
-      expect(await server.getRequestBodyJson()).toStrictEqual({
+      expect(await server.calls[0].requestBody).toStrictEqual({
         model: 'command-r-plus',
         messages: [
           {
@@ -302,6 +382,24 @@ describe('doGenerate', () => {
             content: 'you are a friendly bot!',
           },
           { role: 'user', content: 'Hello' },
+        ],
+        tool_choice: 'NONE',
+        tools: [
+          {
+            type: 'function',
+            function: {
+              name: 'test-tool',
+              parameters: {
+                type: 'object',
+                properties: {
+                  value: { type: 'string' },
+                },
+                required: ['value'],
+                additionalProperties: false,
+                $schema: 'http://json-schema.org/draft-07/schema#',
+              },
+            },
+          },
         ],
       });
     });
@@ -326,9 +424,7 @@ describe('doGenerate', () => {
       },
     });
 
-    const requestHeaders = await server.getRequestHeaders();
-
-    expect(requestHeaders).toStrictEqual({
+    expect(server.calls[0].requestHeaders).toStrictEqual({
       authorization: 'Bearer test-api-key',
       'content-type': 'application/json',
       'custom-provider-header': 'provider-header-value',
@@ -355,7 +451,7 @@ describe('doGenerate', () => {
       },
     });
 
-    expect(await server.getRequestBodyJson()).toStrictEqual({
+    expect(await server.calls[0].requestBody).toStrictEqual({
       model: 'command-r-plus',
       messages: [
         { role: 'system', content: 'you are a friendly bot!' },
@@ -363,7 +459,7 @@ describe('doGenerate', () => {
       ],
       response_format: {
         type: 'json_object',
-        schema: {
+        json_schema: {
           type: 'object',
           properties: {
             text: { type: 'string' },
@@ -387,13 +483,59 @@ describe('doGenerate', () => {
       body: '{"model":"command-r-plus","messages":[{"role":"system","content":"you are a friendly bot!"},{"role":"user","content":"Hello"}]}',
     });
   });
+
+  it('should handle string "null" tool call arguments', async () => {
+    prepareJsonResponse({
+      tool_calls: [
+        {
+          id: 'test-id-1',
+          type: 'function',
+          function: {
+            name: 'currentTime',
+            arguments: 'null',
+          },
+        },
+      ],
+    });
+
+    const { toolCalls } = await model.doGenerate({
+      inputFormat: 'prompt',
+      mode: {
+        type: 'regular',
+        tools: [
+          {
+            type: 'function',
+            name: 'currentTime',
+            parameters: {
+              type: 'object',
+              properties: {},
+              required: [],
+              additionalProperties: false,
+              $schema: 'http://json-schema.org/draft-07/schema#',
+            },
+          },
+        ],
+      },
+      prompt: [
+        {
+          role: 'user',
+          content: [{ type: 'text', text: 'What is the current time?' }],
+        },
+      ],
+    });
+
+    expect(toolCalls).toStrictEqual([
+      {
+        toolCallId: 'test-id-1',
+        toolCallType: 'function',
+        toolName: 'currentTime',
+        args: '{}',
+      },
+    ]);
+  });
 });
 
 describe('doStream', () => {
-  const server = new StreamingTestServer('https://api.cohere.com/v2/chat');
-
-  server.setupTestEnvironment();
-
   function prepareStreamResponse({
     content,
     usage = {
@@ -401,6 +543,7 @@ describe('doStream', () => {
       output_tokens: 244,
     },
     finish_reason = 'COMPLETE',
+    headers,
   }: {
     content: string[];
     usage?: {
@@ -408,18 +551,23 @@ describe('doStream', () => {
       output_tokens: number;
     };
     finish_reason?: string;
+    headers?: Record<string, string>;
   }) {
-    server.responseChunks = [
-      `event: message-start\ndata: {"type":"message-start","id":"586ac33f-9c64-452c-8f8d-e5890e73b6fb"}\n\n`,
-      ...content.map(
-        text =>
-          `event: content-delta\ndata: {"type":"content-delta","delta":{"message":{"content":{"text":"${text}"}}}}\n\n`,
-      ),
-      `event: message-end\ndata: {"type":"message-end","delta":` +
-        `{"finish_reason":"${finish_reason}",` +
-        `"usage":{"tokens":{"input_tokens":${usage.input_tokens},"output_tokens":${usage.output_tokens}}}}}\n\n`,
-      `data: [DONE]\n\n`,
-    ];
+    server.urls['https://api.cohere.com/v2/chat'].response = {
+      type: 'stream-chunks',
+      headers,
+      chunks: [
+        `event: message-start\ndata: {"type":"message-start","id":"586ac33f-9c64-452c-8f8d-e5890e73b6fb"}\n\n`,
+        ...content.map(
+          text =>
+            `event: content-delta\ndata: {"type":"content-delta","delta":{"message":{"content":{"text":"${text}"}}}}\n\n`,
+        ),
+        `event: message-end\ndata: {"type":"message-end","delta":` +
+          `{"finish_reason":"${finish_reason}",` +
+          `"usage":{"tokens":{"input_tokens":${usage.input_tokens},"output_tokens":${usage.output_tokens}}}}}\n\n`,
+        `data: [DONE]\n\n`,
+      ],
+    };
   }
 
   it('should stream text deltas', async () => {
@@ -453,24 +601,26 @@ describe('doStream', () => {
   });
 
   it('should stream tool deltas', async () => {
-    server.responseChunks = [
-      `event: message-start\ndata: {"type":"message-start","id":"29f14a5a-11de-4cae-9800-25e4747408ea"}\n\n`,
-      `event: tool-plan-delta\ndata: {"type":"tool-plan-delta","delta":{"message":{"tool_plan":"Looking up the stock price for AAPL."}}}\n\n`,
-      `event: tool-call-start\ndata: {"type":"tool-call-start","delta":{"message":{"tool_calls":{"id":"test-id-1","type":"function","function":{"name":"test-tool","arguments":""}}}}}\n\n`,
-      `event: tool-call-delta\ndata: {"type":"tool-call-delta","delta":{"message":{"tool_calls":{"function":{"arguments":"{\\n    \\""}}}}}\n\n`,
-      `event: tool-call-delta\ndata: {"type":"tool-call-delta","delta":{"message":{"tool_calls":{"function":{"arguments":"ticker"}}}}}\n\n`,
-      `event: tool-call-delta\ndata: {"type":"tool-call-delta","delta":{"message":{"tool_calls":{"function":{"arguments":"_"}}}}}\n\n`,
-      `event: tool-call-delta\ndata: {"type":"tool-call-delta","delta":{"message":{"tool_calls":{"function":{"arguments":"symbol"}}}}}\n\n`,
-      `event: tool-call-delta\ndata: {"type":"tool-call-delta","delta":{"message":{"tool_calls":{"function":{"arguments":"\\":"}}}}}\n\n`,
-      `event: tool-call-delta\ndata: {"type":"tool-call-delta","delta":{"message":{"tool_calls":{"function":{"arguments":" \\""}}}}}\n\n`,
-      `event: tool-call-delta\ndata: {"type":"tool-call-delta","delta":{"message":{"tool_calls":{"function":{"arguments":"AAPL"}}}}}\n\n`,
-      `event: tool-call-delta\ndata: {"type":"tool-call-delta","delta":{"message":{"tool_calls":{"function":{"arguments":"\\""}}}}}\n\n`,
-      `event: tool-call-delta\ndata: {"type":"tool-call-delta","delta":{"message":{"tool_calls":{"function":{"arguments":"\\n"}}}}}\n\n`,
-      `event: tool-call-delta\ndata: {"type":"tool-call-delta","delta":{"message":{"tool_calls":{"function":{"arguments":"}"}}}}}\n\n`,
-      `event: tool-call-end\ndata: {"type":"tool-call-end"}\n\n`,
-      `event: message-end\ndata: {"type":"message-end","delta":{"finish_reason":"COMPLETE","usage":{"tokens":{"input_tokens":893,"output_tokens":62}}}}\n\n`,
-      `data: [DONE]\n\n`,
-    ];
+    server.urls['https://api.cohere.com/v2/chat'].response = {
+      type: 'stream-chunks',
+      chunks: [
+        `event: message-start\ndata: {"type":"message-start","id":"29f14a5a-11de-4cae-9800-25e4747408ea"}\n\n`,
+        `event: tool-call-start\ndata: {"type":"tool-call-start","delta":{"message":{"tool_calls":{"id":"test-id-1","type":"function","function":{"name":"test-tool","arguments":""}}}}}\n\n`,
+        `event: tool-call-delta\ndata: {"type":"tool-call-delta","delta":{"message":{"tool_calls":{"function":{"arguments":"{\\n    \\""}}}}}\n\n`,
+        `event: tool-call-delta\ndata: {"type":"tool-call-delta","delta":{"message":{"tool_calls":{"function":{"arguments":"ticker"}}}}}\n\n`,
+        `event: tool-call-delta\ndata: {"type":"tool-call-delta","delta":{"message":{"tool_calls":{"function":{"arguments":"_"}}}}}\n\n`,
+        `event: tool-call-delta\ndata: {"type":"tool-call-delta","delta":{"message":{"tool_calls":{"function":{"arguments":"symbol"}}}}}\n\n`,
+        `event: tool-call-delta\ndata: {"type":"tool-call-delta","delta":{"message":{"tool_calls":{"function":{"arguments":"\\":"}}}}}\n\n`,
+        `event: tool-call-delta\ndata: {"type":"tool-call-delta","delta":{"message":{"tool_calls":{"function":{"arguments":" \\""}}}}}\n\n`,
+        `event: tool-call-delta\ndata: {"type":"tool-call-delta","delta":{"message":{"tool_calls":{"function":{"arguments":"AAPL"}}}}}\n\n`,
+        `event: tool-call-delta\ndata: {"type":"tool-call-delta","delta":{"message":{"tool_calls":{"function":{"arguments":"\\""}}}}}\n\n`,
+        `event: tool-call-delta\ndata: {"type":"tool-call-delta","delta":{"message":{"tool_calls":{"function":{"arguments":"\\n"}}}}}\n\n`,
+        `event: tool-call-delta\ndata: {"type":"tool-call-delta","delta":{"message":{"tool_calls":{"function":{"arguments":"}"}}}}}\n\n`,
+        `event: tool-call-end\ndata: {"type":"tool-call-end"}\n\n`,
+        `event: message-end\ndata: {"type":"message-end","delta":{"finish_reason":"COMPLETE","usage":{"tokens":{"input_tokens":893,"output_tokens":62}}}}\n\n`,
+        `data: [DONE]\n\n`,
+      ],
+    };
 
     const { stream } = await model.doStream({
       inputFormat: 'prompt',
@@ -497,10 +647,6 @@ describe('doStream', () => {
 
     expect(responseArray).toStrictEqual([
       { type: 'response-metadata', id: '29f14a5a-11de-4cae-9800-25e4747408ea' },
-      {
-        type: 'text-delta',
-        textDelta: 'Looking up the stock price for AAPL.',
-      },
       {
         type: 'tool-call-delta',
         toolCallType: 'function',
@@ -606,7 +752,10 @@ describe('doStream', () => {
   });
 
   it('should handle unparsable stream parts', async () => {
-    server.responseChunks = [`event: foo-message\ndata: {unparsable}\n\n`];
+    server.urls['https://api.cohere.com/v2/chat'].response = {
+      type: 'stream-chunks',
+      chunks: [`event: foo-message\ndata: {unparsable}\n\n`],
+    };
 
     const { stream } = await model.doStream({
       inputFormat: 'prompt',
@@ -628,11 +777,10 @@ describe('doStream', () => {
   });
 
   it('should expose the raw response headers', async () => {
-    prepareStreamResponse({ content: [] });
-
-    server.responseHeaders = {
-      'test-header': 'test-value',
-    };
+    prepareStreamResponse({
+      content: [],
+      headers: { 'test-header': 'test-value' },
+    });
 
     const { rawResponse } = await model.doStream({
       inputFormat: 'prompt',
@@ -660,7 +808,7 @@ describe('doStream', () => {
       prompt: TEST_PROMPT,
     });
 
-    expect(await server.getRequestBodyJson()).toStrictEqual({
+    expect(await server.calls[0].requestBody).toStrictEqual({
       stream: true,
       model: 'command-r-plus',
       messages: [
@@ -695,9 +843,7 @@ describe('doStream', () => {
       },
     });
 
-    const requestHeaders = await server.getRequestHeaders();
-
-    expect(requestHeaders).toStrictEqual({
+    expect(server.calls[0].requestHeaders).toStrictEqual({
       authorization: 'Bearer test-api-key',
       'content-type': 'application/json',
       'custom-provider-header': 'provider-header-value',
@@ -717,5 +863,65 @@ describe('doStream', () => {
     expect(request).toStrictEqual({
       body: '{"model":"command-r-plus","messages":[{"role":"system","content":"you are a friendly bot!"},{"role":"user","content":"Hello"}],"stream":true}',
     });
+  });
+
+  it('should handle empty tool call arguments', async () => {
+    server.urls['https://api.cohere.com/v2/chat'].response = {
+      type: 'stream-chunks',
+      chunks: [
+        `event: message-start\ndata: {"type":"message-start","id":"test-id"}\n\n`,
+        `event: tool-call-start\ndata: {"type":"tool-call-start","delta":{"message":{"tool_calls":{"id":"test-id-1","type":"function","function":{"name":"test-tool","arguments":""}}}}}\n\n`,
+        `event: tool-call-end\ndata: {"type":"tool-call-end"}\n\n`,
+        `event: message-end\ndata: {"type":"message-end","delta":{"finish_reason":"COMPLETE","usage":{"tokens":{"input_tokens":10,"output_tokens":5}}}}\n\n`,
+        `data: [DONE]\n\n`,
+      ],
+    };
+
+    const { stream } = await model.doStream({
+      inputFormat: 'prompt',
+      prompt: TEST_PROMPT,
+      mode: {
+        type: 'regular',
+        tools: [
+          {
+            type: 'function',
+            name: 'test-tool',
+            parameters: {
+              type: 'object',
+              properties: {},
+              required: [],
+              additionalProperties: false,
+              $schema: 'http://json-schema.org/draft-07/schema#',
+            },
+          },
+        ],
+      },
+    });
+
+    expect(await convertReadableStreamToArray(stream)).toStrictEqual([
+      { type: 'response-metadata', id: 'test-id' },
+      {
+        type: 'tool-call-delta',
+        toolCallType: 'function',
+        toolCallId: 'test-id-1',
+        toolName: 'test-tool',
+        argsTextDelta: '',
+      },
+      {
+        type: 'tool-call',
+        toolCallId: 'test-id-1',
+        toolCallType: 'function',
+        toolName: 'test-tool',
+        args: '{}',
+      },
+      {
+        type: 'finish',
+        finishReason: 'stop',
+        usage: {
+          promptTokens: 10,
+          completionTokens: 5,
+        },
+      },
+    ]);
   });
 });

@@ -109,6 +109,7 @@ export function createAnthropic(
       baseURL,
       headers: getHeaders,
       fetch: options.fetch,
+      supportsImageUrls: true,
     });
 
   const provider = function (
@@ -133,7 +134,7 @@ export function createAnthropic(
 
   provider.tools = anthropicTools;
 
-  return provider as AnthropicProvider;
+  return provider;
 }
 
 /**

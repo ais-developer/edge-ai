@@ -1,25 +1,25 @@
 import {
   EmbeddingModelV1,
+  ImageModelV1,
   LanguageModelV1,
   ProviderV1,
 } from '@ai-sdk/provider';
-import {
-  FetchFunction,
-  loadApiKey,
-  withoutTrailingSlash,
-} from '@ai-sdk/provider-utils';
+import { FetchFunction, withoutTrailingSlash } from '@ai-sdk/provider-utils';
 import { OpenAICompatibleChatLanguageModel } from './openai-compatible-chat-language-model';
 import { OpenAICompatibleChatSettings } from './openai-compatible-chat-settings';
 import { OpenAICompatibleCompletionLanguageModel } from './openai-compatible-completion-language-model';
 import { OpenAICompatibleCompletionSettings } from './openai-compatible-completion-settings';
-import { OpenAICompatibleEmbeddingSettings } from './openai-compatible-embedding-settings';
 import { OpenAICompatibleEmbeddingModel } from './openai-compatible-embedding-model';
+import { OpenAICompatibleEmbeddingSettings } from './openai-compatible-embedding-settings';
+import { OpenAICompatibleImageSettings } from './openai-compatible-image-settings';
+import { OpenAICompatibleImageModel } from './openai-compatible-image-model';
 
 export interface OpenAICompatibleProvider<
   CHAT_MODEL_IDS extends string = string,
   COMPLETION_MODEL_IDS extends string = string,
   EMBEDDING_MODEL_IDS extends string = string,
-> extends ProviderV1 {
+  IMAGE_MODEL_IDS extends string = string,
+> extends Omit<ProviderV1, 'imageModel'> {
   (
     modelId: CHAT_MODEL_IDS,
     settings?: OpenAICompatibleChatSettings,
@@ -44,13 +44,23 @@ export interface OpenAICompatibleProvider<
     modelId: EMBEDDING_MODEL_IDS,
     settings?: OpenAICompatibleEmbeddingSettings,
   ): EmbeddingModelV1<string>;
+
+  imageModel(
+    modelId: IMAGE_MODEL_IDS,
+    settings?: OpenAICompatibleImageSettings,
+  ): ImageModelV1;
 }
 
 export interface OpenAICompatibleProviderSettings {
   /**
 Base URL for the API calls.
    */
-  baseURL?: string;
+  baseURL: string;
+
+  /**
+Provider name.
+   */
+  name: string;
 
   /**
 API key for authenticating requests. If specified, adds an `Authorization`
@@ -75,11 +85,6 @@ Custom fetch implementation. You can use it as a middleware to intercept request
 or to provide a custom fetch implementation for e.g. testing.
    */
   fetch?: FetchFunction;
-
-  /**
-Provider name.
-   */
-  name?: string;
 }
 
 /**
@@ -89,21 +94,16 @@ export function createOpenAICompatible<
   CHAT_MODEL_IDS extends string,
   COMPLETION_MODEL_IDS extends string,
   EMBEDDING_MODEL_IDS extends string,
+  IMAGE_MODEL_IDS extends string,
 >(
   options: OpenAICompatibleProviderSettings,
 ): OpenAICompatibleProvider<
   CHAT_MODEL_IDS,
   COMPLETION_MODEL_IDS,
-  EMBEDDING_MODEL_IDS
+  EMBEDDING_MODEL_IDS,
+  IMAGE_MODEL_IDS
 > {
-  if (!options.baseURL) {
-    throw new Error('Base URL is required');
-  }
   const baseURL = withoutTrailingSlash(options.baseURL);
-
-  if (!options.name) {
-    throw new Error('Provider name is required');
-  }
   const providerName = options.name;
 
   interface CommonModelConfig {
@@ -165,6 +165,16 @@ export function createOpenAICompatible<
       getCommonModelConfig('embedding'),
     );
 
+  const createImageModel = (
+    modelId: IMAGE_MODEL_IDS,
+    settings: OpenAICompatibleImageSettings = {},
+  ) =>
+    new OpenAICompatibleImageModel(
+      modelId,
+      settings,
+      getCommonModelConfig('image'),
+    );
+
   const provider = (
     modelId: CHAT_MODEL_IDS,
     settings?: OpenAICompatibleChatSettings,
@@ -174,10 +184,12 @@ export function createOpenAICompatible<
   provider.chatModel = createChatModel;
   provider.completionModel = createCompletionModel;
   provider.textEmbeddingModel = createEmbeddingModel;
+  provider.imageModel = createImageModel;
 
   return provider as OpenAICompatibleProvider<
     CHAT_MODEL_IDS,
     COMPLETION_MODEL_IDS,
-    EMBEDDING_MODEL_IDS
+    EMBEDDING_MODEL_IDS,
+    IMAGE_MODEL_IDS
   >;
 }

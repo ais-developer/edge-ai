@@ -9,6 +9,7 @@ export {
   parseDataStreamPart,
   processDataStream,
   processTextStream,
+  zodSchema,
 } from '@ai-sdk/ui-utils';
 export type {
   AssistantMessage,
@@ -23,6 +24,7 @@ export type {
   IdGenerator,
   JSONValue,
   Message,
+  UIMessage,
   RequestOptions,
   Schema,
   ToolInvocation,
@@ -35,6 +37,7 @@ export * from './embed';
 export * from './generate-image';
 export * from './generate-object';
 export * from './generate-text';
+export * from './transcribe';
 export * from './middleware';
 export * from './prompt';
 export * from './registry';
